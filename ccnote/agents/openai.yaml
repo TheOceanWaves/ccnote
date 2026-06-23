@@ -1,0 +1,5 @@
+interface:
+  display_name: "CCNote"
+  short_description: "Detailed Markdown notes for academic concepts"
+  default_prompt: "Use $ccnote to explain this paper screenshot as a detailed Markdown note."
+
