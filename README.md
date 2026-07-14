@@ -24,6 +24,7 @@ CCNote is useful if you:
 - Explains formulas step by step instead of skipping algebra or dimensional reasoning.
 - Follows source screenshots or excerpts first, then adds helpful context when needed.
 - Supports follow-up revisions such as "make this more detailed" or "fix formula rendering."
+- Runs a bundled, dependency-free structural validator after note edits to catch common KaTeX hazards such as mismatched visible braces, unbalanced `\left` / `\right`, and missing command backslashes.
 
 ## Installation
 
@@ -102,6 +103,14 @@ $$
 
 Inline math such as `$...$` should be avoided in generated notes unless explicitly requested.
 
+After creating or revising a note, CCNote runs its bundled validator until the file passes:
+
+```powershell
+python "$HOME\.codex\skills\ccnote\scripts\validate_markdown_math.py" "C:\path\to\note.md"
+```
+
+The validator is a lightweight structural check rather than a complete KaTeX parser. It reports the file, source line, and math block for common syntax hazards.
+
 ## Repository Layout
 
 ```text
@@ -115,10 +124,14 @@ Inline math such as `$...$` should be avoided in generated notes unless explicit
 |   |-- install-to-codex.ps1
 |   |-- sync-from-installed.ps1
 |   `-- validate.ps1
+|-- tests/
+|   `-- test_validate_markdown_math.py
 `-- ccnote/
     |-- SKILL.md
-    `-- agents/
-        `-- openai.yaml
+    |-- agents/
+    |   `-- openai.yaml
+    `-- scripts/
+        `-- validate_markdown_math.py
 ```
 
 The installable Codex skill package is the `ccnote/` directory.
@@ -132,6 +145,12 @@ If you want to check that the packaged skill is structurally valid, run:
 ```
 
 This runs Codex's skill validator against the `ccnote/` package.
+
+To validate one or more Markdown notes directly:
+
+```powershell
+python .\ccnote\scripts\validate_markdown_math.py "C:\path\to\note.md"
+```
 
 ## License
 

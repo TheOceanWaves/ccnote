@@ -42,7 +42,7 @@ For screenshots or source excerpts:
 - Mark added context as explanatory supplement when it goes beyond the screenshot.
 - If an image is low-resolution or partially cut off, explain what is visible and state any uncertainty.
 
-## LaTeX Rules
+## LaTeX and KaTeX Rules
 
 Use strict display-style LaTeX for formulas.
 
@@ -67,7 +67,34 @@ $$
 
 - Keep prose punctuation outside formula blocks.
 - Use notation from the source image or document unless correcting a clear typo.
-- After editing, check that no ordinary inline `$...$` formulas remain in the Markdown file.
+- Write visible set braces as a matched pair with `\{` and `\}`. Use unescaped `{` and `}` only for TeX grouping and command arguments. Never mix an unescaped opening brace with an escaped closing brace, or the reverse.
+- Pair every exact `\left` command with an exact `\right` command in the same formula block.
+- Include the leading backslash on LaTeX commands such as `\mathcal`, `\mathbf`, `\mathrm`, `\mathbb`, `\boldsymbol`, `\operatorname`, and `\text`.
+- After editing, run the bundled structural validator and fix every reported issue. Do not treat visual inspection as sufficient.
+
+For example, this is invalid because the visible set uses mismatched brace forms:
+
+```markdown
+$$
+f_{\theta}
+\left(
+\mathbf r,{Z_i,\mathbf R_i\}
+\right)
+$$
+```
+
+Write it as:
+
+```markdown
+$$
+f_{\theta}
+\left(
+\mathbf r,\{Z_i,\mathbf R_i\}
+\right)
+$$
+```
+
+The bundled validator checks structural Markdown and TeX hazards; it is not a complete KaTeX semantic parser.
 
 ## Recommended Note Structure
 
@@ -120,8 +147,16 @@ For comparison sections, include:
    - The file exists in the target folder.
    - Important formulas use `$$ ... $$` display blocks.
    - No ordinary inline `$...$` formulas remain unless the user explicitly requested inline math.
+   - Visible set braces, TeX grouping braces, and exact `\left` / `\right` commands are balanced.
    - The note is detailed enough: dimensions, formula meaning, intuition, and summary are present.
-6. Reply briefly with the file path and the core takeaway.
+6. Run the validator from the skill directory, passing every Markdown note created or changed:
+
+```text
+python scripts/validate_markdown_math.py <note.md> [<note2.md> ...]
+```
+
+7. If validation fails, patch the reported formula blocks and rerun until the command exits successfully.
+8. Reply briefly with the file path and the core takeaway.
 
 ## Handling Follow-Up Corrections
 

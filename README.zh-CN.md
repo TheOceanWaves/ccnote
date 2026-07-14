@@ -24,6 +24,7 @@ CCNote 是一个 Codex skill，用来把学术概念、公式、图示、论文�
 - 按步骤解释公式，不跳过关键代数步骤或维度说明。
 - 优先按照截图或原文结构解释，再补充必要背景。
 - 支持后续修改，例如“讲得更详细一点”或“把公式改成严格 LaTeX 格式”。
+- 每次修改笔记后运行内置的零依赖结构校验器，检查可见花括号混用、`\left` / `\right` 失配和 LaTeX 命令漏写反斜杠等常见 KaTeX 问题。
 
 ## 安装方法
 
@@ -102,6 +103,14 @@ $$
 
 除非你明确要求，否则生成笔记时会尽量避免使用 `$...$` 这种行内公式。
 
+创建或修改笔记后，CCNote 会运行内置检查器并持续修复，直到文件通过：
+
+```powershell
+python "$HOME\.codex\skills\ccnote\scripts\validate_markdown_math.py" "C:\path\to\note.md"
+```
+
+这个脚本是轻量级结构检查器，不是完整的 KaTeX 解析器。它会报告文件、源代码行号和公式块编号，帮助定位常见语法问题。
+
 ## 仓库结构
 
 ```text
@@ -115,10 +124,14 @@ $$
 |   |-- install-to-codex.ps1
 |   |-- sync-from-installed.ps1
 |   `-- validate.ps1
+|-- tests/
+|   `-- test_validate_markdown_math.py
 `-- ccnote/
     |-- SKILL.md
-    `-- agents/
-        `-- openai.yaml
+    |-- agents/
+    |   `-- openai.yaml
+    `-- scripts/
+        `-- validate_markdown_math.py
 ```
 
 真正可安装的 Codex skill 是 `ccnote/` 目录。
@@ -132,6 +145,12 @@ $$
 ```
 
 它会对 `ccnote/` 目录运行 Codex skill 校验器。
+
+如果只想检查一个或多个 Markdown 笔记，可以直接运行：
+
+```powershell
+python .\ccnote\scripts\validate_markdown_math.py "C:\path\to\note.md"
+```
 
 ## 许可证
 

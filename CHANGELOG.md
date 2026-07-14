@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## v0.1.2 - 2026-07-14
+
+### Added
+
+- Added a dependency-free Markdown math validator for common structural KaTeX hazards.
+- Added regression tests for visible-brace mismatches, missing command backslashes, display delimiters, and inline math.
+
+### Changed
+
+- Strengthened CCNote's LaTeX workflow with mandatory post-edit validation.
+- Updated installation, repository validation, and installed-skill sync scripts to include the bundled validator.
+
 ## v0.1.1 - 2026-06-23
 
 ### Changed
