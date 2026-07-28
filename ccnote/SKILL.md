@@ -65,6 +65,16 @@ $$
 $$
 ```
 
+- Never put mathematical notation or LaTeX commands inside Markdown inline-code
+  backticks. A span such as `` `\phi_m` `` is rendered verbatim instead of as
+  math. Move the notation to a standalone `$$ ... $$` block.
+- Do not place display-math blocks inside Markdown table cells. If a comparison
+  needs mathematical symbols, use plain Unicode symbols in the table when they
+  are unambiguous, or move each symbol and its explanation below the table into
+  standalone display blocks.
+- Fenced code examples may contain literal LaTeX source when the source itself
+  is what the note is teaching. Do not treat those code examples as rendered
+  formulas.
 - Keep prose punctuation outside formula blocks.
 - Use notation from the source image or document unless correcting a clear typo.
 - Write visible set braces as a matched pair with `\{` and `\}`. Use unescaped `{` and `}` only for TeX grouping and command arguments. Never mix an unescaped opening brace with an escaped closing brace, or the reverse.
@@ -147,6 +157,8 @@ For comparison sections, include:
    - The file exists in the target folder.
    - Important formulas use `$$ ... $$` display blocks.
    - No ordinary inline `$...$` formulas remain unless the user explicitly requested inline math.
+   - No mathematical notation or LaTeX command is wrapped in Markdown inline-code backticks.
+   - No display-math block is embedded in a Markdown table cell.
    - Visible set braces, TeX grouping braces, and exact `\left` / `\right` commands are balanced.
    - The note is detailed enough: dimensions, formula meaning, intuition, and summary are present.
 6. Run the validator from the skill directory, passing every Markdown note created or changed:

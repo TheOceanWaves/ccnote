@@ -23,6 +23,14 @@ BARE_COMMAND_RE = re.compile(
     r"(mathcal|mathbf|mathrm|mathbb|boldsymbol|operatorname|text|frac|sqrt)"
     r"\b"
 )
+LATEX_COMMAND_RE = re.compile(r"\\[A-Za-z]+")
+TEX_SUBSCRIPT_OR_SUPERSCRIPT_RE = re.compile(
+    r"(?<![A-Za-z0-9_])"
+    r"[A-Za-z]"
+    r"(?:_\{?[A-Za-z0-9]+\}?|\^\{?[A-Za-z0-9+\-]+\}?)"
+    r"(?![A-Za-z0-9_])"
+)
+WINDOWS_PATH_RE = re.compile(r"^(?:[A-Za-z]:\\|\\\\)")
 
 
 @dataclass(frozen=True)
@@ -45,10 +53,10 @@ def _is_escaped(text: str, index: int) -> bool:
     return _preceding_backslashes(text, index) % 2 == 1
 
 
-def _strip_inline_code(line: str) -> str:
-    """Replace matched Markdown inline-code spans with spaces."""
+def _inline_code_spans(line: str) -> list[tuple[int, int, str]]:
+    """Return matched Markdown inline-code spans and their contents."""
 
-    chars = list(line)
+    spans: list[tuple[int, int, str]] = []
     cursor = 0
     while cursor < len(line):
         if line[cursor] != "`":
@@ -65,10 +73,33 @@ def _strip_inline_code(line: str) -> str:
             continue
 
         close_end = close + len(marker)
-        chars[cursor:close_end] = [" "] * (close_end - cursor)
+        spans.append((cursor, close_end, line[end_of_run:close]))
         cursor = close_end
 
+    return spans
+
+
+def _strip_inline_code(line: str) -> str:
+    """Replace matched Markdown inline-code spans with spaces."""
+
+    chars = list(line)
+    for start, end, _ in _inline_code_spans(line):
+        chars[start:end] = [" "] * (end - start)
     return "".join(chars)
+
+
+def _contains_tex_notation(text: str) -> bool:
+    if WINDOWS_PATH_RE.match(text.strip()):
+        return False
+    return bool(
+        LATEX_COMMAND_RE.search(text)
+        or TEX_SUBSCRIPT_OR_SUPERSCRIPT_RE.search(text)
+    )
+
+
+def _is_markdown_table_row(line: str) -> bool:
+    stripped = line.strip()
+    return stripped.count("|") >= 2
 
 
 def _unescaped_dollar_positions(line: str) -> list[int]:
@@ -202,8 +233,32 @@ def validate_text(text: str) -> tuple[list[Issue], int]:
         if in_fence:
             continue
 
+        inline_code_spans = _inline_code_spans(raw_line)
+        for _, _, content in inline_code_spans:
+            if _contains_tex_notation(content):
+                issues.append(
+                    Issue(
+                        line_number,
+                        "LaTeX-like math inside Markdown inline code is rendered "
+                        "verbatim; move it to a standalone $$ block",
+                    )
+                )
+
         line = _strip_inline_code(raw_line)
         stripped = line.strip()
+
+        if (
+            not in_display
+            and _is_markdown_table_row(raw_line)
+            and _contains_tex_notation(line)
+        ):
+            issues.append(
+                Issue(
+                    line_number,
+                    "LaTeX-like math in a Markdown table cell is not reliably "
+                    "rendered; use plain Unicode or move it to a standalone $$ block",
+                )
+            )
 
         if stripped == "$$":
             if not in_display:

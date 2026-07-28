@@ -104,12 +104,44 @@ $$
         self.assertEqual(1, len(issues))
         self.assertIn("inline $ math", issues[0].message)
 
+    def test_latex_command_in_inline_code_fails(self) -> None:
+        issues, _ = VALIDATOR.validate_text("Bad `\\phi_m` notation.\n")
+        self.assertEqual(1, len(issues))
+        self.assertIn("rendered verbatim", issues[0].message)
+
+    def test_tex_subscript_in_table_inline_code_fails(self) -> None:
+        issues, _ = VALIDATOR.validate_text(
+            "| Symbol | Meaning |\n|---|---|\n| `B_x` | Flux density |\n"
+        )
+        self.assertEqual(1, len(issues))
+        self.assertIn("rendered verbatim", issues[0].message)
+
+    def test_raw_latex_in_table_cell_fails(self) -> None:
+        issues, _ = VALIDATOR.validate_text(
+            "| Symbol | Meaning |\n|---|---|\n| \\phi_m | Magnetic flux |\n"
+        )
+        self.assertEqual(1, len(issues))
+        self.assertIn("Markdown table cell", issues[0].message)
+
+    def test_unicode_symbol_in_table_passes(self) -> None:
+        issues, _ = VALIDATOR.validate_text(
+            "| Symbol | Meaning |\n|---|---|\n| φₘ | Magnetic flux |\n"
+        )
+        self.assertEqual([], issues)
+
+    def test_windows_path_in_inline_code_passes(self) -> None:
+        issues, _ = VALIDATOR.validate_text(
+            "Open `C:\\Users\\student\\note.md` for the note.\n"
+        )
+        self.assertEqual([], issues)
+
     def test_fenced_code_is_ignored(self) -> None:
         text = r"""
 ~~~markdown
 $$
 \mathbf r,{Z_i,\mathbf R_i\}
 $$
+`\phi_m`
 ~~~
 """
         issues, blocks = VALIDATOR.validate_text(text)
